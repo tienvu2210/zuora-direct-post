@@ -57,6 +57,9 @@
                     request.send();
                 });
             }
+            async function onInvoiceButton() {
+                updateInvoiceList()
+            }
             async function loadHPM() {
                 return new Promise(function(resolve, reject) {
                     var request = new XMLHttpRequest();
@@ -86,6 +89,7 @@
             async function onLoadPage() {
                 loadHPM()
                 updateInvoiceList()
+                document.getElementById("invoiceListButton").addEventListener('click', onInvoiceButton)
             }
         </script>
     </head>
@@ -97,6 +101,9 @@
                     <!-- rows updated async -->
                 </tbody>
             </table>
+        </div>
+        <div>
+            <button type="button" id="invoiceListButton">Refresh Invoice List</button>
         </div>
         <div id="zuora_payment"></div>
     </body>
