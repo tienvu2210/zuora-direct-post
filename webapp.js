@@ -4,12 +4,14 @@ const http = require('http')
 const url = require('url')
 const fs = require('fs')
 const inv = require('./api/invoices')
+const hpm = require('./api/hpmParams')
 
 const onRequest = async(request, response) => {
     let pathName = url.parse(request.url).pathname
     console.log('onRequest:pathname: ' + pathName);
 
     let zuoraAccountId = process.env.ZUORA_ACCOUNT_ID
+    let hpmPageId = process.env.ZUORA_HPM_PAGE_ID
 
     switch (pathName) {
         case '/' :
@@ -17,6 +19,13 @@ const onRequest = async(request, response) => {
             let indexHtml = fs.readFileSync('./pages/index.html', 'utf8')
             response.writeHead(200, {'Content-Type': 'text/html'})
             response.write(indexHtml);
+            response.end();
+            break;
+        case '/api/hpmParams' :
+            // call backend to get hpmParams (including refreshed access tokens)
+            let hpmParams = await hpm.getHpmParams(hpmPageId);
+            response.writeHead(200, {'Content-Type': 'application/json'})
+            response.write(JSON.stringify({hpmParams: hpmParams}));
             response.end();
             break;
         case '/api/invoices' :
