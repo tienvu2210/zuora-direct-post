@@ -39,10 +39,10 @@ const onRequest = async(request, response) => {
             break;
         case '/api/payInvoices' :
             // call backend to pay a list of invoices
-            jsonBody(request, response, function (err, body) {
+            jsonBody(request, response, async function (err, body) {
                 if (!err) {
                     let invoicesToPay = body
-                    let payInvoicesResult = inv.payInvoices(zuoraAccountId, queryParams.paymentMethodId, invoicesToPay);
+                    let payInvoicesResult = await inv.payInvoices(zuoraAccountId, queryParams.paymentMethodId, invoicesToPay);
                     response.writeHead(200, {'Content-Type': 'application/json'})
                     response.write(JSON.stringify({payInvoicesResult: payInvoicesResult}));
                     response.end();

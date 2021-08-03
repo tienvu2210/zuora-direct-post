@@ -58,6 +58,7 @@
                             document.getElementById('invoices_table_body')
                         )
                         new_tbody.id = 'invoices_table_body'
+                        addStatusMsg('Invoice List Updated')
                     }
                     request.send();
                 });
@@ -71,14 +72,15 @@
                     request.open('POST', '/api/payInvoices?paymentMethodId=' + paymentMethodId, false);
                     request.setRequestHeader('content-Type', 'application/json')
                     request.onload = function() {
-                        console.log('return msg from pay invoice backend')
-                        // TODO - report on individual status of payments
-                        // JSON.parse(request.responseText).hpmParams
+                        let payInvoicesResults = JSON.parse(request.responseText).payInvoicesResult
+                        for (idx in payInvoicesResults) {
+                            addStatusMsg('Paid Invoice ' + payInvoicesResults[idx].invoiceId + ' [' + payInvoicesResults[idx].status + ']')
+                        }
                     }
                     if (openInvoices.length) {
                         request.send(JSON.stringify(openInvoices));
                     } else {
-                        console.log('No Posted Invoices with non-zero balances')
+                        addStatusMsg('No Posted Invoices with non-zero balances')
                     }
                 });
             }
@@ -91,17 +93,21 @@
                         hpmParams = JSON.parse(request.responseText).hpmParams
 
                         Z.setEventHandler('onloadCallback', function() {
-                            console.log('HPM page is loaded.');
+                            addStatusMsg('HPM Loaded')
                         });
 
                         hpmCallback = function(response) {
-                            console.log('HPM Callback: ', response.success)
                             if (response.success == 'true') {
                                 let paymentMethodId = response.refId
-                                console.log('New Payment Method ID: ', paymentMethodId)
+                                addStatusMsg('HPM SUCCEEDED - Added PaymentMethod ' + paymentMethodId)
                                 if (document.getElementById('payOpenInvoicesCB').checked) {
+                                    addStatusMsg('Pay Invoices CB Checked - Attempting Invoice Payment')
                                     payOpenInvoices(paymentMethodId)
+                                } else {
+                                    addStatusMsg('Pay Invoices CB Not Checked - Not attempting Invoice Payment')
                                 }
+                            } else {
+                                addStatusMsg('HPM FAILED - PaymentMethod Not Added')
                             }
                         }
 
@@ -112,9 +118,13 @@
                 });
             }
             async function onLoadPage() {
-                loadHPM()
+                addStatusMsg('Page Loaded')
                 updateInvoiceList()
+                loadHPM()
                 document.getElementById('invoiceListButton').addEventListener('click', onInvoiceButton)
+            }
+            function addStatusMsg(msg) {
+                document.getElementById('statusText').value += msg +'\r\n'
             }
         </script>
     </head>
@@ -128,10 +138,12 @@
             </table>
         </div>
         <div>
-            <button type='button' id='invoiceListButton'>Refresh Invoice List</button>
+            <br>
+            <button type='button' id='invoiceListButton'>Refresh Invoice List</button><br><br>
             <input type='checkbox' id='payOpenInvoicesCB'>
-            <label for='payOpenInvoicesCB'>Pay Open Invoices</label>
+            <label for='payOpenInvoicesCB'>Pay Open Invoices</label><br><br>
         </div>
-        <div id='zuora_payment'></div>
+        <div id='zuora_payment'></div><br><br>
+        <textarea rows='20' cols='75' id='statusText' readonly='true'></textarea>
     </body>
 </html>

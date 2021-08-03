@@ -40,10 +40,11 @@ const payInvoices = async (zuoraAccountId, paymentMethodId, invoicesToPay) => {
     let authTokenResponse = await auth.getAuthToken();
     let access_token = authTokenResponse.data.access_token;
 
+    let statusResponse = []
+
     for (idx in invoicesToPay) {
         let invoiceId = invoicesToPay[idx].id
         let invoiceBalance = invoicesToPay[idx].balance
-        console.log('payInvoices:invoice: ' + invoiceId)
 
         let response = await axios({
             method: 'post',
@@ -64,9 +65,10 @@ const payInvoices = async (zuoraAccountId, paymentMethodId, invoicesToPay) => {
                 'Authorization': 'Bearer ' + access_token
             }
         });
+        statusResponse.push({invoiceId: invoiceId, status: response.data.Success})
     }
 
-    return {success: true}
+    return statusResponse
 }
 
 exports.getInvoices = getInvoices;
