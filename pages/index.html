@@ -1,7 +1,74 @@
 <html>
     <head>
+        <script>
+            function buildInvoiceTableRow(invoice) {
+                let invoiceTableRowProperties = [
+                    'id',
+                    'documentNumber',
+                    'status',
+                    'documentDate',
+                    'amount',
+                    'balance',
+                ]
+                let newRow = document.createElement('tr');
+                for (let idx in invoiceTableRowProperties) {
+                    let newCol = document.createElement('td');
+                    newCol.innerHTML = invoice[invoiceTableRowProperties[idx]]
+                    newRow.appendChild(newCol)
+                }
+                return newRow
+            }
+            function buildInvoiceTableRowHeader() {
+                let invoiceTableRowHeaderLabels = [
+                    'Invoice ID',
+                    'Invoice Number',
+                    'Invoice Status',
+                    'Invoice Date',
+                    'Invoice Amount',
+                    'Invoice Balance',
+                ]
+                let newRow = document.createElement('tr');
+                for (let idx in invoiceTableRowHeaderLabels) {
+                    let newCol = document.createElement('th');
+                    newCol.innerHTML = invoiceTableRowHeaderLabels[idx]
+                    newRow.appendChild(newCol)
+                }
+                return newRow
+            }
+            async function updateInvoiceList() {
+                return new Promise(function(resolve, reject) {
+                    var request = new XMLHttpRequest();
+                    request.open('GET', '/api/invoices', false);
+                    request.setRequestHeader('content-Type', 'application/json')
+                    request.onload = function() {
+                        jsonResponse = JSON.parse(request.responseText)
+                        var new_tbody = document.createElement('tbody');
+                        new_tbody.appendChild(buildInvoiceTableRowHeader())
+                        for (idx in jsonResponse.invoices) {
+                            new_tbody.appendChild(buildInvoiceTableRow(jsonResponse.invoices[idx]))
+                        }
+                        document.getElementById('invoices_table').replaceChild(
+                            new_tbody,
+                            document.getElementById('invoices_table_body')
+                        )
+                        new_tbody.id = 'invoices_table_body'
+                    }
+                    request.send();
+                });
+            }
+            async function onLoadPage() {
+                updateInvoiceList()
+            }
+        </script>
     </head>
-    <body>
+    <body onload='onLoadPage();'>
         <h1>HPM Page</h1>
+        <div>
+            <table border='1' , id='invoices_table'>
+                <tbody id='invoices_table_body'>
+                    <!-- rows updated async -->
+                </tbody>
+            </table>
+        </div>
     </body>
 </html>
