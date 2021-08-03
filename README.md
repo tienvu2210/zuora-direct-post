@@ -1,5 +1,7 @@
 Local webapp demo that shows how to use Zuora HPM to create a new PaymentMethod and pay Invoices
 
+<img src="https://github.com/thilgen/zuora-hpm/blob/main/hpm-screenshot.png" height="750" />
+
 ## Installation
 
 ```sh
