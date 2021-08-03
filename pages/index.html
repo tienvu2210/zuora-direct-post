@@ -1,5 +1,6 @@
 <html>
     <head>
+        <script type="text/javascript" src="https://static.zuora.com/Resources/libs/hosted/1.3.1/zuora-min.js"></script>
         <script>
             function buildInvoiceTableRow(invoice) {
                 let invoiceTableRowProperties = [
@@ -56,7 +57,34 @@
                     request.send();
                 });
             }
+            async function loadHPM() {
+                return new Promise(function(resolve, reject) {
+                    var request = new XMLHttpRequest();
+                    request.open('GET', '/api/hpmParams', false);
+                    request.setRequestHeader('content-Type', 'application/json')
+                    request.onload = function() {
+                        hpmParams = JSON.parse(request.responseText).hpmParams
+
+                        Z.setEventHandler("onloadCallback", function() {
+                            console.log("HPM page is loaded.");
+                        });
+
+                        hpmCallback = function(response) {
+                            console.log("HPM Callback: ", response.success)
+                            if (response.success == "true") {
+                                let paymentMethodId = response.refId
+                                console.log("New Payment Method ID: ", paymentMethodId)
+                            }
+                        }
+
+                        var prepopulateFields = {}
+                        Z.render(hpmParams, prepopulateFields, hpmCallback);
+                    }
+                    request.send();
+                });
+            }
             async function onLoadPage() {
+                loadHPM()
                 updateInvoiceList()
             }
         </script>
@@ -70,5 +98,6 @@
                 </tbody>
             </table>
         </div>
+        <div id="zuora_payment"></div>
     </body>
 </html>

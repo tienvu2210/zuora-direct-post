@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const axios = require('axios')
 const auth = require('../util/auth');
 const zuora = require('../util/zuoraEndpoints');
@@ -19,7 +21,25 @@ const getHpmParams = async (hpmPageId) => {
         'Authorization': 'Bearer ' + access_token
       }
     });
-    return response.data;
+
+    let zuoraAccountId = process.env.ZUORA_ACCOUNT_ID
+    let zuoraGatewayName = process.env.ZUORA_GATEWAY_NAME
+
+    hpmParams = {}
+    hpmParams.signature = response.data.signature
+    hpmParams.token = response.data.token
+    hpmParams.tenantId = response.data.tenantId
+    hpmParams.key = response.data.key
+    hpmParams.id = hpmPageId
+    hpmParams.field_accountId = zuoraAccountId
+    hpmParams.paymentGateway = zuoraGatewayName
+    hpmParams.url = zuora.HPM_URI
+    hpmParams.style = 'inline'
+    hpmParams.submitEnabled = 'true'
+    hpmParams.locale = 'en'
+    hpmParams.param_supportedTypes = 'Visa,MasterCard,Discover'
+
+    return hpmParams
 }
 
 exports.getHpmParams = getHpmParams;
