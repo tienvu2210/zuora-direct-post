@@ -5,9 +5,11 @@ const url = require('url')
 const fs = require('fs')
 const inv = require('./api/invoices')
 const hpm = require('./api/hpmParams')
+const jsonBody = require('body/json')
 
 const onRequest = async(request, response) => {
     let pathName = url.parse(request.url).pathname
+    let queryParams = url.parse(request.url,true).query
     console.log('onRequest:pathname: ' + pathName);
 
     let zuoraAccountId = process.env.ZUORA_ACCOUNT_ID
@@ -34,6 +36,18 @@ const onRequest = async(request, response) => {
             response.writeHead(200, {'Content-Type': 'application/json'})
             response.write(JSON.stringify({invoices: invoices}));
             response.end();
+            break;
+        case '/api/payInvoices' :
+            // call backend to pay a list of invoices
+            jsonBody(request, response, function (err, body) {
+                if (!err) {
+                    let invoicesToPay = body
+                    let payInvoicesResult = inv.payInvoices(zuoraAccountId, queryParams.paymentMethodId, invoicesToPay);
+                    response.writeHead(200, {'Content-Type': 'application/json'})
+                    response.write(JSON.stringify({payInvoicesResult: payInvoicesResult}));
+                    response.end();
+                }
+            })
             break;
         default:
             response.writeHead(404, {'Content-Type': 'text/html'})

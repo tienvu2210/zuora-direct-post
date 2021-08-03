@@ -1,7 +1,8 @@
 <html>
     <head>
-        <script type="text/javascript" src="https://static.zuora.com/Resources/libs/hosted/1.3.1/zuora-min.js"></script>
+        <script type='text/javascript' src='https://static.zuora.com/Resources/libs/hosted/1.3.1/zuora-min.js'></script>
         <script>
+            var openInvoices = []
             function buildInvoiceTableRow(invoice) {
                 let invoiceTableRowProperties = [
                     'id',
@@ -16,6 +17,9 @@
                     let newCol = document.createElement('td');
                     newCol.innerHTML = invoice[invoiceTableRowProperties[idx]]
                     newRow.appendChild(newCol)
+                }
+                if ('Posted' == invoice.status && invoice.balance > 0) {
+                    openInvoices.push(invoice)
                 }
                 return newRow
             }
@@ -37,6 +41,7 @@
                 return newRow
             }
             async function updateInvoiceList() {
+                openInvoices = []
                 return new Promise(function(resolve, reject) {
                     var request = new XMLHttpRequest();
                     request.open('GET', '/api/invoices', false);
@@ -60,6 +65,23 @@
             async function onInvoiceButton() {
                 updateInvoiceList()
             }
+            async function payOpenInvoices(paymentMethodId) {
+                return new Promise(function(resolve, reject) {
+                    var request = new XMLHttpRequest();
+                    request.open('POST', '/api/payInvoices?paymentMethodId=' + paymentMethodId, false);
+                    request.setRequestHeader('content-Type', 'application/json')
+                    request.onload = function() {
+                        console.log('return msg from pay invoice backend')
+                        // TODO - report on individual status of payments
+                        // JSON.parse(request.responseText).hpmParams
+                    }
+                    if (openInvoices.length) {
+                        request.send(JSON.stringify(openInvoices));
+                    } else {
+                        console.log('No Posted Invoices with non-zero balances')
+                    }
+                });
+            }
             async function loadHPM() {
                 return new Promise(function(resolve, reject) {
                     var request = new XMLHttpRequest();
@@ -68,15 +90,18 @@
                     request.onload = function() {
                         hpmParams = JSON.parse(request.responseText).hpmParams
 
-                        Z.setEventHandler("onloadCallback", function() {
-                            console.log("HPM page is loaded.");
+                        Z.setEventHandler('onloadCallback', function() {
+                            console.log('HPM page is loaded.');
                         });
 
                         hpmCallback = function(response) {
-                            console.log("HPM Callback: ", response.success)
-                            if (response.success == "true") {
+                            console.log('HPM Callback: ', response.success)
+                            if (response.success == 'true') {
                                 let paymentMethodId = response.refId
-                                console.log("New Payment Method ID: ", paymentMethodId)
+                                console.log('New Payment Method ID: ', paymentMethodId)
+                                if (document.getElementById('payOpenInvoicesCB').checked) {
+                                    payOpenInvoices(paymentMethodId)
+                                }
                             }
                         }
 
@@ -89,7 +114,7 @@
             async function onLoadPage() {
                 loadHPM()
                 updateInvoiceList()
-                document.getElementById("invoiceListButton").addEventListener('click', onInvoiceButton)
+                document.getElementById('invoiceListButton').addEventListener('click', onInvoiceButton)
             }
         </script>
     </head>
@@ -103,8 +128,10 @@
             </table>
         </div>
         <div>
-            <button type="button" id="invoiceListButton">Refresh Invoice List</button>
+            <button type='button' id='invoiceListButton'>Refresh Invoice List</button>
+            <input type='checkbox' id='payOpenInvoicesCB'>
+            <label for='payOpenInvoicesCB'>Pay Open Invoices</label>
         </div>
-        <div id="zuora_payment"></div>
+        <div id='zuora_payment'></div>
     </body>
 </html>
