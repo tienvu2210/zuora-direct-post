@@ -19,5 +19,10 @@ ZUORA_GATEWAY_NAME='<Gateway Name used by ZUORA_HPM_PAGE_ID>'
 ```sh
 node webapp.js
 ```
-Then open browser to: http://localhost:8080/
 
+**Main Page**
+* http://localhost:8080/
+
+**Backend Endpoints**
+* http://localhost:8080/api/invoices
+* http://localhost:8080/api/hpmParams
