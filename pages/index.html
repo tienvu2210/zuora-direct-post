@@ -105,6 +105,8 @@
                             if (response.success == 'true') {
                                 let paymentMethodId = response.refId
                                 addStatusMsg('HPM SUCCEEDED - Added PaymentMethod ' + paymentMethodId)
+                                let paymentId = response.PaymentId
+                                addStatusMsg('HPM SUCCEEDED - Made Payment ' + paymentId)
                                 if (document.getElementById('payOpenInvoicesCB').checked) {
                                     addStatusMsg('Pay Invoices CB Checked - Attempting Invoice Payment')
                                     payOpenInvoices(paymentMethodId)
