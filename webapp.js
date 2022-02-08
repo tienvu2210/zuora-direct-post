@@ -7,6 +7,8 @@ const inv = require('./api/invoices')
 const hpm = require('./api/hpmParams')
 const jsonBody = require('body/json')
 
+const WEBSERVERPORT = 8180
+
 const onRequest = async(request, response) => {
     let pathName = url.parse(request.url).pathname
     let queryParams = url.parse(request.url,true).query
@@ -57,5 +59,5 @@ const onRequest = async(request, response) => {
     }
 }
 
-http.createServer(onRequest).listen(8080);
-console.log('Server has started');
+http.createServer(onRequest).listen(WEBSERVERPORT);
+console.log(`Server has started - listening on ${WEBSERVERPORT}`);
