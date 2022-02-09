@@ -4,11 +4,11 @@ const axios = require('axios')
 const auth = require('../util/auth');
 const zuora = require('../util/zuoraEndpoints');
 
-const getHpmParams = async (hpmPageId) => {
-    let zuoraAccountId = process.env.ZUORA_ACCOUNT_ID
-
+const getHpmParams = async (zuoraAccountId) => {
     let authTokenResponse = await auth.getAuthToken();
     let access_token = authTokenResponse.data.access_token;
+
+    let hpmPageId = process.env.ZUORA_HPM_PAGE_ID
 
     let response = await axios({
       method: 'post',
@@ -40,10 +40,6 @@ const getHpmParams = async (hpmPageId) => {
     hpmParams.submitEnabled = 'true'
     hpmParams.locale = 'en'
     hpmParams.param_supportedTypes = 'Visa,MasterCard,Discover'
-
-    hpmParams.doPayment = true
-    hpmParams.storePaymentMethod = false
-    hpmParams.documents = "[{\"type\": \"invoice\", \"ref\": \"INV00234983\"}]"
 
     return hpmParams
 }

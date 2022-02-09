@@ -44,7 +44,8 @@
                 openInvoices = []
                 return new Promise(function(resolve, reject) {
                     var request = new XMLHttpRequest();
-                    request.open('GET', '/api/invoices', false);
+                    var zuoraAccountId = document.getElementById('zuoraAccountId').value
+                    request.open('GET', `/api/invoices?zuoraAccountId=${zuoraAccountId}`, false);
                     request.setRequestHeader('content-Type', 'application/json')
                     request.onload = function() {
                         jsonResponse = JSON.parse(request.responseText)
@@ -58,6 +59,7 @@
                             document.getElementById('invoices_table_body')
                         )
                         new_tbody.id = 'invoices_table_body'
+                        document.getElementById('invoices_table').border = 1
                         addStatusMsg('Invoice List Updated')
                     }
                     request.send();
@@ -73,7 +75,8 @@
             async function payOpenInvoices(paymentMethodId) {
                 return new Promise(function(resolve, reject) {
                     var request = new XMLHttpRequest();
-                    request.open('POST', '/api/payInvoices?paymentMethodId=' + paymentMethodId, false);
+                    var zuoraAccountId = document.getElementById('zuoraAccountId').value
+                    request.open('POST', `/api/payInvoices?paymentMethodId=${paymentMethodId}&zuoraAccountId=${zuoraAccountId}`, false);
                     request.setRequestHeader('content-Type', 'application/json')
                     request.onload = function() {
                         let payInvoicesResults = JSON.parse(request.responseText).payInvoicesResult
@@ -91,7 +94,8 @@
             async function loadHPM() {
                 return new Promise(function(resolve, reject) {
                     var request = new XMLHttpRequest();
-                    request.open('GET', '/api/hpmParams', false);
+                    var zuoraAccountId = document.getElementById('zuoraAccountId').value
+                    request.open('GET', `/api/hpmParams?zuoraAccountId=${zuoraAccountId}`, false);
                     request.setRequestHeader('content-Type', 'application/json')
                     request.onload = function() {
                         hpmParams = JSON.parse(request.responseText).hpmParams
@@ -102,6 +106,7 @@
 
                         hpmCallback = function(response) {
                             document.getElementById('zuora_payment').style.display = "none"
+                            addStatusMsg('\nloadHPM() callback response\n' + JSON.stringify(response, null, 2) + '\n')
                             if (response.success == 'true') {
                                 let paymentMethodId = response.refId
                                 addStatusMsg('HPM SUCCEEDED - Added PaymentMethod ' + paymentMethodId)
@@ -118,16 +123,36 @@
                             }
                         }
 
+                        hpmParams.doPayment = true
+                        hpmParams.storePaymentMethod = false
+                        hpmParams.documents = []
+                        for (idx in openInvoices ) {
+                            var openInvoice = openInvoices[idx]
+                            hpmParams.documents.push({
+                                type: 'invoice',
+                                ref: openInvoice.documentNumber
+                            })
+                        }
+                        hpmParams.documents = JSON.stringify(hpmParams.documents)
+                        
                         var prepopulateFields = {}
                         Z.render(hpmParams, prepopulateFields, hpmCallback);
                     }
                     request.send();
                 });
             }
+            async function getZuoraAccountId() {
+                var request = new XMLHttpRequest();
+                request.open('GET', '/api/zuoraAccount', false);
+                request.setRequestHeader('content-Type', 'application/json')
+                request.onload = function() {
+                    zuoraAccountId = JSON.parse(request.responseText).zuoraAccountId
+                    document.getElementById('zuoraAccountId').value = zuoraAccountId
+                }
+                request.send();
+            }
             async function onLoadPage() {
-                addStatusMsg('Page Loaded')
-                updateInvoiceList()
-                loadHPM()
+                getZuoraAccountId()
                 document.getElementById('invoiceListButton').addEventListener('click', onInvoiceButton)
                 document.getElementById('reloadHPMButton').addEventListener('click', onReloadHPMButton)
             }
@@ -139,10 +164,16 @@
     <body onload='onLoadPage();'>
         <h1>HPM Page</h1>
         <div>
-            <button type='button' id='invoiceListButton'>Reload Invoice List</button><br><br>
+            <label for='zuoraAccountId'>Zuora Account ID</label><br>
+            <textarea rows='1' cols='75' id='zuoraAccountId' style='resize: none;'></textarea>
+            <br>
+            <br>
         </div>
         <div>
-            <table border='1' , id='invoices_table'>
+            <button type='button' id='invoiceListButton'>Load Invoice List</button><br><br>
+        </div>
+        <div>
+            <table id='invoices_table'>
                 <tbody id='invoices_table_body'>
                     <!-- rows updated async -->
                 </tbody>
@@ -150,14 +181,16 @@
         </div>
         <div>
             <br>
-            <button type='button' id='reloadHPMButton'>Reload HPM</button>
+            <button type='button' id='reloadHPMButton'>Load HPM</button>
         </div>
+        <!--
         <div>
             <br>
             <input type='checkbox' id='payOpenInvoicesCB'>
             <label for='payOpenInvoicesCB' id='payOpenInvoicesCBLabel'>Pay Open Invoices</label>
             <br><br>
         </div>
+        -->
         <div id='zuora_payment'></div>
         <div>
             <textarea rows='20' cols='75' id='statusText' readonly='true'></textarea>

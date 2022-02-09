@@ -14,9 +14,6 @@ const onRequest = async(request, response) => {
     let queryParams = url.parse(request.url,true).query
     console.log('onRequest:pathname: ' + pathName);
 
-    let zuoraAccountId = process.env.ZUORA_ACCOUNT_ID
-    let hpmPageId = process.env.ZUORA_HPM_PAGE_ID
-
     switch (pathName) {
         case '/' :
             // draw the main page with invoices and hpm
@@ -27,14 +24,14 @@ const onRequest = async(request, response) => {
             break;
         case '/api/hpmParams' :
             // call backend to get hpmParams (including refreshed access tokens)
-            let hpmParams = await hpm.getHpmParams(hpmPageId);
+            let hpmParams = await hpm.getHpmParams(queryParams.zuoraAccountId);
             response.writeHead(200, {'Content-Type': 'application/json'})
             response.write(JSON.stringify({hpmParams: hpmParams}));
             response.end();
             break;
         case '/api/invoices' :
             // call backend to get the list of invoices
-            let invoices = await inv.getInvoices(zuoraAccountId);
+            let invoices = await inv.getInvoices(queryParams.zuoraAccountId);
             response.writeHead(200, {'Content-Type': 'application/json'})
             response.write(JSON.stringify({invoices: invoices}));
             response.end();
@@ -44,12 +41,17 @@ const onRequest = async(request, response) => {
             jsonBody(request, response, async function (err, body) {
                 if (!err) {
                     let invoicesToPay = body
-                    let payInvoicesResult = await inv.payInvoices(zuoraAccountId, queryParams.paymentMethodId, invoicesToPay);
+                    let payInvoicesResult = await inv.payInvoices(queryParams.zuoraAccountId, queryParams.paymentMethodId, invoicesToPay);
                     response.writeHead(200, {'Content-Type': 'application/json'})
                     response.write(JSON.stringify({payInvoicesResult: payInvoicesResult}));
                     response.end();
                 }
             })
+            break;
+        case '/api/zuoraAccount' :
+            response.writeHead(200, {'Content-Type': 'application/json'})
+            response.write(JSON.stringify({zuoraAccountId: process.env.ZUORA_ACCOUNT_ID}));
+            response.end();
             break;
         default:
             response.writeHead(404, {'Content-Type': 'text/html'})
