@@ -24,7 +24,7 @@ const onRequest = async(request, response) => {
             break;
         case '/api/hpmParams' :
             // call backend to get hpmParams (including refreshed access tokens)
-            let hpmParams = await hpm.getHpmParams(queryParams.zuoraAccountId);
+            let hpmParams = await hpm.getHpmParams(queryParams.zuoraAccountId, queryParams.useDarkHPM == 'true');
             response.writeHead(200, {'Content-Type': 'application/json'})
             response.write(JSON.stringify({hpmParams: hpmParams}));
             response.end();

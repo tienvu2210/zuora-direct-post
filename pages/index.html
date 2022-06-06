@@ -73,6 +73,10 @@
             document.getElementById('zuora_payment').style.display = "block"
             loadHPM()
         }
+        async function onReloadHPMDarkButton() {
+            var useDarkHPM = true
+            _loadHPM(useDarkHPM)
+        }
         async function payOpenInvoices(paymentMethodId) {
             return new Promise(function (resolve, reject) {
                 var request = new XMLHttpRequest();
@@ -93,10 +97,14 @@
             });
         }
         async function loadHPM() {
+            var useDarkHPM = false
+            _loadHPM(useDarkHPM)
+        }
+        async function _loadHPM(useDarkHPM) {
             return new Promise(function (resolve, reject) {
                 var request = new XMLHttpRequest();
                 var zuoraAccountId = document.getElementById('zuoraAccountId').value
-                request.open('GET', `/api/hpmParams?zuoraAccountId=${zuoraAccountId}`, false);
+                request.open('GET', `/api/hpmParams?zuoraAccountId=${zuoraAccountId}&useDarkHPM=${useDarkHPM}`, false);
                 request.setRequestHeader('content-Type', 'application/json')
                 request.onload = function () {
                     hpmParams = JSON.parse(request.responseText).hpmParams
@@ -124,6 +132,9 @@
                         }
                     }
 
+                    console.log(`Loading HPM Page ID: ${hpmParams.id}`)
+                    
+                    /*
                     hpmParams.doPayment = true
                     hpmParams.storePaymentMethod = false
                     hpmParams.documents = []
@@ -135,8 +146,20 @@
                         })
                     }
                     hpmParams.documents = JSON.stringify(hpmParams.documents)
+                    */
 
                     var prepopulateFields = {}
+                    /*
+                    var prepopulateFields = {
+                        creditCardHolderName: 'Chris Thilgen',
+                        creditCardAddress1: '123 Main Street',
+                        creditCardCity: 'San Francisco',
+                        creditCardState: 'California',
+                        creditCardPostalCode: '94107',
+                        creditCardCountry: 'BRA'
+                    }
+                    */
+                    //Z.allowScroll(true);
                     Z.render(hpmParams, prepopulateFields, hpmCallback);
                 }
                 request.send();
@@ -156,6 +179,7 @@
             getZuoraAccountId()
             document.getElementById('invoiceListButton').addEventListener('click', onInvoiceButton)
             document.getElementById('reloadHPMButton').addEventListener('click', onReloadHPMButton)
+            document.getElementById('reloadHPMDarkButton').addEventListener('click', onReloadHPMDarkButton)
         }
         function addStatusMsg(msg) {
             document.getElementById('statusText').value += msg + '\r\n'
@@ -184,7 +208,9 @@
     <div>
         <br>
         <button type='button' id='reloadHPMButton'>Load HPM</button>
+        <button type='button' id='reloadHPMDarkButton'>Load Dark HPM</button>
     </div>
+    <br>
     <!--
         <div>
             <br>
@@ -193,7 +219,8 @@
             <br><br>
         </div>
         -->
-    <div id='zuora_payment'></div>
+    <div id='zuora_payment' allowScroll='true' scrolling='true' style="width: 625px;"></div>
+    <br>
     <div>
         <textarea rows='20' cols='75' id='statusText' readonly='true'></textarea>
     </div>
