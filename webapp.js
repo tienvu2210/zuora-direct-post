@@ -7,7 +7,7 @@ const inv = require('./api/invoices')
 const hpm = require('./api/hpmParams')
 const jsonBody = require('body/json')
 
-const WEBSERVERPORT = 8180
+const WEBSERVERPORT = 3200
 
 const onRequest = async(request, response) => {
     let pathName = url.parse(request.url).pathname
@@ -22,9 +22,15 @@ const onRequest = async(request, response) => {
             response.write(indexHtml);
             response.end();
             break;
+        case '/pages/stuff.js':
+            response.writeHead(200, {'Content-Type': 'text/html'})
+            response.write(fs.readFileSync('./pages/stuff.js', 'utf8'));
+            response.end();
+            break;
         case '/api/hpmParams' :
             // call backend to get hpmParams (including refreshed access tokens)
             let hpmParams = await hpm.getHpmParams(queryParams.zuoraAccountId, queryParams.useDarkHPM == 'true');
+            console.log(hpmParams);
             response.writeHead(200, {'Content-Type': 'application/json'})
             response.write(JSON.stringify({hpmParams: hpmParams}));
             response.end();
@@ -61,5 +67,7 @@ const onRequest = async(request, response) => {
     }
 }
 
-http.createServer(onRequest).listen(WEBSERVERPORT);
-console.log(`Server has started - listening on ${WEBSERVERPORT}`);
+const hostname = '127.0.0.1';
+http.createServer(onRequest).listen(WEBSERVERPORT, hostname, () => {
+    console.log(`Server has started - listening on ${WEBSERVERPORT}`);
+});
