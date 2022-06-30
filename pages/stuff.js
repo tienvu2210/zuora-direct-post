@@ -1,3 +1,5 @@
+// const { getHpmParams } = require("../api/hpmParams")
+
 async function onReloadHPMButton() {
     document.getElementById('zuora_payment').style.display = "block"
     loadHPM()
@@ -28,54 +30,10 @@ async function _loadHPM(useDarkHPM) {
                 addStatusMsg('HPM Loaded')
             });
 
-            hpmCallback = function (response) {
-                document.getElementById('zuora_payment').style.display = "none"
-                addStatusMsg('\nloadHPM() callback response\n' + JSON.stringify(response, null, 2) + '\n')
-                if (response.success == 'true') {
-                    let paymentMethodId = response.refId
-                    addStatusMsg('HPM SUCCEEDED - Added PaymentMethod ' + paymentMethodId)
-                    let paymentId = response.PaymentId
-                    addStatusMsg('HPM SUCCEEDED - Made Payment ' + paymentId)
-                    if (document.getElementById('payOpenInvoicesCB').checked) {
-                        addStatusMsg('Pay Invoices CB Checked - Attempting Invoice Payment')
-                        payOpenInvoices(paymentMethodId)
-                    } else {
-                        addStatusMsg('Pay Invoices CB Not Checked - Not attempting Invoice Payment')
-                    }
-                } else {
-                    addStatusMsg('HPM FAILED - PaymentMethod Not Added')
-                }
-            }
-
             console.log(`Loading HPM Page ID: ${hpmParams.id}`)
             
-            /*
-            hpmParams.doPayment = true
-            hpmParams.storePaymentMethod = false
-            hpmParams.documents = []
-            for (idx in openInvoices) {
-                var openInvoice = openInvoices[idx]
-                hpmParams.documents.push({
-                    type: 'invoice',
-                    ref: openInvoice.documentNumber
-                })
-            }
-            hpmParams.documents = JSON.stringify(hpmParams.documents)
-            */
-
             var prepopulateFields = {}
-            /*
-            var prepopulateFields = {
-                creditCardHolderName: 'Chris Thilgen',
-                creditCardAddress1: '123 Main Street',
-                creditCardCity: 'San Francisco',
-                creditCardState: 'California',
-                creditCardPostalCode: '94107',
-                creditCardCountry: 'BRA'
-            }
-            */
-            //Z.allowScroll(true);
-            Z.render(hpmParams, prepopulateFields, hpmCallback);
+            Z.render(hpmParams, prepopulateFields);
         }
         request.send();
     });
@@ -90,11 +48,96 @@ async function getZuoraAccountId() {
     }
     request.send();
 }
+
+async function loadHpmParams() {
+    return new Promise(function (resolve, reject) {
+        var request = new XMLHttpRequest();
+        var zuoraAccountId = document.getElementById('zuoraAccountId').value
+        request.open('GET', `/api/hpmParams?zuoraAccountId=${zuoraAccountId}`, false);
+        request.setRequestHeader('content-Type', 'application/json')
+
+        request.onload = function () {
+            hpmParams = JSON.parse(request.responseText).hpmParams
+
+            stuffs = ["id", "tenantId", "signature", "token", "field_accountId"]
+
+            for (let i = 0; i < stuffs.length; i++) {
+                stuff = stuffs[i];
+                document.querySelector(`#directpost [name="${stuff}"]`).value = hpmParams[stuff]
+            }
+
+            field_stuffs = ["key"]
+            for (let i = 0; i < field_stuffs.length; i++) {
+                field_stuff = field_stuffs[i];
+                document.querySelector(`#directpost [name="field_${field_stuff}"]`).value = hpmParams[field_stuff]
+            }
+
+            window.publicKey = hpmParams.key;
+
+            document.querySelector('#directpost [name="id"]').value = hpmParams.id
+            document.querySelector('#directpost [name="tenantId"]').value = hpmParams.tenantId
+            document.querySelector('#directpost [name="key"]').value = hpmParams.id
+            document.querySelector('#directpost [name="signature"]').value = hpmParams.id
+        }
+        request.send();
+    });
+}
+
 async function onLoadPage() {
     getZuoraAccountId()
+    loadHpmParams()
+    const encryptedValue = buildEncryptedValues();
+    document.querySelector('#directpost [name="encrypted_values"]').value = encryptedValue;
     document.getElementById('reloadHPMButton').addEventListener('click', onReloadHPMButton)
     document.getElementById('reloadHPMDarkButton').addEventListener('click', onReloadHPMDarkButton)
 }
+
 function addStatusMsg(msg) {
     document.getElementById('statusText').value += msg + '\r\n'
 }
+
+function buildEncryptedValues() {
+    const creditCardNumber = 5555555555554444;
+    const cardSecurityCode = 123;
+    const creditCardExpirationMonth = 03;
+    const creditCardExpirationYear = 2023;
+
+    // 1) Construct credit card data to a string in the desired format
+    var unencrypted_values = "#" + creditCardNumber + "#" +
+                            cardSecurityCode + "#" + creditCardExpirationMonth + "#" +
+                            creditCardExpirationYear;
+  
+    // 2) Base64 encode the string, 3) Encrypt the Base64 string 
+    // and 4) Base64 encode the encrypted data
+    return encryptText(unencrypted_values, window.publicKey);
+  }
+  
+  /**
+   * encrypt the text using the specified public key.
+   * @param text the text to be encrypted.
+   * @param key the public key.
+   * @returns Base64 encoded encrypted data.
+   */
+  function encryptText(text, key) {
+    if (key) {
+      try {
+        var key = pidCryptUtil.decodeBase64(key);
+        var rsa = new pidCrypt.RSA();
+        //ASN1 parsing
+        var asn = pidCrypt.ASN1.decode(pidCryptUtil.toByteArray(key));
+        var tree = asn.toHexTree();
+        
+        //setting the public key for encryption with retrieved ASN.1 tree
+        rsa.setPublicKeyFromASN(tree);
+        
+        // Base64 encode and encrypt the string
+        var crypted = rsa.encrypt(text);
+  
+        return pidCryptUtil.encodeBase64(pidCryptUtil.convertFromHex(crypted));
+      } catch(e) {
+        console.info(e);
+      }
+    }
+    // return origin text if unable to encrypt
+    return text;
+  }
