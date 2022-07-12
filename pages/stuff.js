@@ -34,6 +34,7 @@ async function _loadHPM(useDarkHPM) {
             
             var prepopulateFields = {}
             Z.render(hpmParams, prepopulateFields);
+
         }
         request.send();
     });
@@ -76,8 +77,12 @@ async function loadHpmParams() {
 
             document.querySelector('#directpost [name="id"]').value = hpmParams.id
             document.querySelector('#directpost [name="tenantId"]').value = hpmParams.tenantId
-            document.querySelector('#directpost [name="key"]').value = hpmParams.id
-            document.querySelector('#directpost [name="signature"]').value = hpmParams.id
+            // document.querySelector('#directpost [name="field_key"]').value = hpmParams.key
+            document.querySelector('#directpost [name="signature"]').value = hpmParams.signature
+
+
+            // const agreement = Z.setAgreement("External","Recurring","Visa","Your_Ref");
+            // console.log(`agreement is ${agreement}`);
         }
         request.send();
     });
@@ -97,9 +102,10 @@ function addStatusMsg(msg) {
 }
 
 function buildEncryptedValues() {
-    const creditCardNumber = 5555555555554444;
+    // const creditCardNumber = 5555555555554444;
+    const creditCardNumber = 4000003800000446;
     const cardSecurityCode = 123;
-    const creditCardExpirationMonth = 03;
+    const creditCardExpirationMonth = 01;
     const creditCardExpirationYear = 2023;
 
     // 1) Construct credit card data to a string in the desired format
