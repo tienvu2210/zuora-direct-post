@@ -9,11 +9,10 @@
             type="text/javascript"
             src="https://sandbox.na.zuora.com/apps/Hosted/lite2/js/HPM2Security.js"
         ></script>
-        <script type="text/javascript" src="pages/stuff.js"></script>
+        <script type="text/javascript" src="pages/checkout_handler.js"></script>
     </head>
 
-    <body onload="onLoadPage();">
-        <h1>HPM Page</h1>
+    <body>
         <div>
             <label for="zuoraAccountId">Zuora Account ID</label><br />
             <textarea
@@ -23,24 +22,11 @@
                 style="resize: none"
             ></textarea>
             <br />
-            <br />
         </div>
-        <div>
-            <br />
-            <button type="button" id="reloadHPMButton">Load HPM</button>
-            <button type="button" id="reloadHPMDarkButton">
-                Load Dark HPM
-            </button>
-        </div>
+        <button type="button" onclick="fillDefaultCard()">Default Card</button>
         <br />
-        <div
-            id="zuora_payment"
-            allowScroll="true"
-            scrolling="true"
-            style="width: 625px"
-        ></div>
+        <button type="button" onclick="fill3DSCard()">3DS Card</button>
         <br />
-
         <form
             id="directpost"
             name="Payment2Form"
@@ -62,17 +48,19 @@
             />
             <input type="hidden" name="encrypted_values" value="" />
             <input type="hidden" name="field_style" value="iframe" />
+            <input id="card_number" name="card_number" value="" />
             <input
                 id="card_expiration_month"
                 name="card_expiration_month"
-                value="123123"
+                value=""
             />
             <input
                 id="card_expiration_year"
                 name="card_expiration_year"
-                value="sadfasdf"
+                value=""
             />
-            <input id="card_ccv" name="card_ccv" value="asdfsadf" />
+            <input id="card_ccv" name="card_ccv" value="" />
+
             <input type="text" name="field_creditCardType" value="MasterCard" />
             <input
                 type="text"
@@ -120,11 +108,7 @@
                 name="field_agreementSupportedBrands"
                 value="Visa,MasterCard"
             />
-
-            <!-- <input type="text" name="is3DS2Enabled" value="true"/>
-            <input type="text" name="paymentGatewayType" value="Stripe"/>
-            <input type="text" name="cardMandateEnabled" value="false"/>
-            <input type="text" name="stripePublishableKey" value="pk_test_fKNtvx6gKs7mPzg76TupFNF000NCcoHfI9"/> -->
+            <br />
             <input type="submit" />
         </form>
         <div>

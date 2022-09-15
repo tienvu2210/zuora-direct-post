@@ -1,19 +1,21 @@
 {
-  "name": "zuora-hpm",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "axios": "^0.21.1",
-    "body": "^5.1.0",
-    "dotenv": "^10.0.0",
-    "fs": "^0.0.1-security",
-    "qs": "^6.10.1",
-    "stripe": "^10.7.0"
-  }
+    "name": "zuora-hpm",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "axios": "^0.21.1",
+        "body": "^5.1.0",
+        "dotenv": "^10.0.0",
+        "fs": "^0.0.1-security",
+        "qs": "^6.10.1",
+        "stripe": "^10.7.0",
+        "express": "^4.18.1",
+        "nodemon": "^2.0.19"
+    }
 }

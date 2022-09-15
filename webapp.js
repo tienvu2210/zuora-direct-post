@@ -6,8 +6,9 @@ const fs = require("fs");
 const inv = require("./api/invoices");
 const hpm = require("./api/hpmParams");
 const jsonBody = require("body/json");
+const stripe = require("stripe")(process.env.STRIPE_TEST_SECRET_KEY);
 
-const WEBSERVERPORT = 3200;
+const WEBSERVER_PORT = 3200;
 
 const onRequest = async (request, response) => {
     let pathName = url.parse(request.url).pathname;
@@ -20,6 +21,20 @@ const onRequest = async (request, response) => {
             let indexHtml = fs.readFileSync("./pages/index.html", "utf8");
             response.writeHead(200, { "Content-Type": "text/html" });
             response.write(indexHtml);
+            response.end();
+            break;
+        case "/checkout":
+            // draw the direct post form
+            let checkoutHtml = fs.readFileSync("./pages/checkout.html", "utf8");
+            response.writeHead(200, { "Content-Type": "text/html" });
+            response.write(checkoutHtml);
+            response.end();
+            break;
+        case "/pages/checkout_handler.js":
+            response.writeHead(200, { "Content-Type": "text/html" });
+            response.write(
+                fs.readFileSync("./pages/checkout_handler.js", "utf8")
+            );
             response.end();
             break;
         case "/pages/stuff.js":
@@ -80,7 +95,6 @@ const onRequest = async (request, response) => {
     }
 };
 
-const hostname = "127.0.0.1";
-http.createServer(onRequest).listen(WEBSERVERPORT, hostname, () => {
-    console.log(`Server has started - listening on ${WEBSERVERPORT}`);
+http.createServer(onRequest).listen(WEBSERVER_PORT, () => {
+    console.log(`Server has started - listening on ${WEBSERVER_PORT}`);
 });
