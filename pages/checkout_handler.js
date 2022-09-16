@@ -2,14 +2,14 @@ function fillDefaultCard() {
     document.getElementById("card_number").value = 4242424242424242;
     document.getElementById("card_expiration_month").value = 01;
     document.getElementById("card_expiration_year").value = 2024;
-    document.getElementById("card_ccv").value = 123;
+    document.getElementById("card_cvc").value = 123;
 }
 
 function fill3DSCard() {
     document.getElementById("card_number").value = 4000003800000446;
     document.getElementById("card_expiration_month").value = 01;
     document.getElementById("card_expiration_year").value = 2024;
-    document.getElementById("card_ccv").value = 123;
+    document.getElementById("card_cvc").value = 123;
 }
 
 function buildEncryptedValues(
@@ -103,13 +103,122 @@ loadHpmParams = async (form) => {
     request.send();
 };
 
+function addStatusMsg(msg) {
+    document.getElementById("statusText").value += msg + "\r\n";
+}
+
+setupPaymentMethod = async (form) => {
+    var request = new XMLHttpRequest();
+    const card = {
+        number: form.elements.card_number.value,
+        exp_month: form.elements.card_expiration_month.value,
+        exp_year: form.elements.card_expiration_year.value,
+        cvc: form.elements.card_cvc.value,
+    };
+    request.open(
+        "GET",
+        `/api/setupPaymentMethod?card=${JSON.stringify(card)}`,
+        false
+    );
+    request.setRequestHeader("content-Type", "application/json");
+
+    request.onload = function () {
+        paymentMethod = JSON.parse(request.responseText);
+        addStatusMsg(request.responseText);
+        document.getElementById("paymentMethodId").value = paymentMethod.id;
+    };
+    request.send();
+};
+
+setupIntends = async () => {
+    var paymentMethodId = document.getElementById("paymentMethodId").value;
+    var request = new XMLHttpRequest();
+    request.open(
+        "GET",
+        `/api/setupIntends?paymentMethodId=${paymentMethodId}`,
+        false
+    );
+    request.setRequestHeader("content-Type", "application/json");
+    request.onload = function () {
+        setupIntends = JSON.parse(request.responseText);
+        addStatusMsg(request.responseText);
+        document.getElementById("setupIntentsId").value = setupIntends.id;
+        document.getElementById("setupIntentsClientSecret").value =
+            setupIntends.client_secret;
+        if (
+            setupIntends.status === "requires_action" &&
+            setupIntends.next_action
+        ) {
+            document.getElementById("requiresAction").value = "TRUE";
+            document.getElementById("3dsurl").value =
+                setupIntends.next_action.redirect_to_url.url;
+        } else {
+            document.getElementById("requiresAction").value = "FALSE";
+        }
+    };
+    request.send();
+};
+
+// https://stripe.com/docs/payments/3d-secure#manual-redirect
+maybeVerify3DS = async () => {
+    return new Promise((resolve) => {
+        if (document.getElementById("requiresAction").value === "TRUE") {
+            const url = document.getElementById("3dsurl").value;
+            const iframe = document.createElement("iframe");
+            iframe.src = url;
+            iframe.width = 600;
+            iframe.height = 400;
+            document.getElementById("3dsContainer").appendChild(iframe);
+        } else {
+            resolve();
+        }
+    });
+};
+
+on3DSComplete = () => {
+    // Hide the 3DS UI
+    document.getElementById("3dsContainer").remove();
+
+    const setupIntentsId = document.getElementById("setupIntentsId").value;
+
+    var request = new XMLHttpRequest();
+    request.open(
+        "GET",
+        `/api/retrieveSetupIntent?setupIntentsId=${setupIntentsId}`,
+        false
+    );
+    request.setRequestHeader("content-Type", "application/json");
+    request.onload = function () {
+        setupIntend = JSON.parse(request.responseText);
+        addStatusMsg(request.responseText);
+        document.getElementById("networkTransactionId").value =
+            setupIntend.latest_attempt.payment_method_details.card.network_transaction_id;
+
+        fetch("https://apisandbox.zuora.com/apps/PublicHostedPageLite.do", {
+            method: "POST",
+            headers: {
+                "Content-Type": "multipart/form-data",
+                "Access-Control-Allow-Origin": "http://localhost:3200/",
+            },
+            body: new FormData(document.getElementById("directpost")),
+        });
+    };
+    request.send();
+};
+
 const submitDirectPost = async (form) => {
-    // Store reference to form to make later code easier to read
+    setupPaymentMethod(form);
+    setupIntends();
+    maybeVerify3DS();
+    form.elements.field_mitNetworkTransactionId.value = document.getElementById(
+        "networkTransactionId"
+    ).value;
+
     getZuoraAccountId();
     loadHpmParams(form);
     const encryptedValue = buildEncryptedValues(
         form.elements.card_number.value,
-        form.elements.card_ccv.value,
+        form.elements.card_cvc.value,
         form.elements.card_expiration_month.value,
         form.elements.card_expiration_year.value
     );
@@ -122,6 +231,16 @@ window.onload = () => {
         .addEventListener("submit", (e) => {
             submitDirectPost(e.target);
 
-            // e.preventDefault();
+            e.preventDefault();
         });
+
+    window.addEventListener(
+        "message",
+        function (ev) {
+            if (ev.data === "3DS-authentication-complete") {
+                on3DSComplete();
+            }
+        },
+        false
+    );
 };

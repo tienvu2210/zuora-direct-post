@@ -14,6 +14,75 @@
 
     <body>
         <div>
+            <label for="paymentMethodId">Stripe Payment Method Id</label><br />
+            <textarea
+                rows="1"
+                cols="75"
+                id="paymentMethodId"
+                style="resize: none"
+            ></textarea>
+            <br />
+        </div>
+
+        <div>
+            <label for="setupIntentsId">Stripe Setup Intents Id</label><br />
+            <textarea
+                rows="1"
+                cols="75"
+                id="setupIntentsId"
+                style="resize: none"
+            ></textarea>
+            <br />
+        </div>
+
+        <div>
+            <label for="setupIntentsClientSecret"
+                >Stripe Setup Intents Client Secret</label
+            ><br />
+            <textarea
+                rows="1"
+                cols="75"
+                id="setupIntentsClientSecret"
+                style="resize: none"
+            ></textarea>
+            <br />
+        </div>
+
+        <div>
+            <label for="requiresAction">Requires 3DS?</label><br />
+            <textarea
+                rows="1"
+                cols="75"
+                id="requiresAction"
+                style="resize: none"
+            ></textarea>
+            <br />
+        </div>
+
+        <div>
+            <label for="3dsurl">3DS URL</label><br />
+            <textarea
+                rows="1"
+                cols="75"
+                id="3dsurl"
+                style="resize: none"
+            ></textarea>
+            <br />
+        </div>
+
+        <div>
+            <label for="networkTransactionId">3DS Network Transaction Id</label
+            ><br />
+            <textarea
+                rows="1"
+                cols="75"
+                id="networkTransactionId"
+                style="resize: none"
+            ></textarea>
+            <br />
+        </div>
+
+        <div>
             <label for="zuoraAccountId">Zuora Account ID</label><br />
             <textarea
                 rows="1"
@@ -23,6 +92,7 @@
             ></textarea>
             <br />
         </div>
+
         <button type="button" onclick="fillDefaultCard()">Default Card</button>
         <br />
         <button type="button" onclick="fill3DSCard()">3DS Card</button>
@@ -59,7 +129,7 @@
                 name="card_expiration_year"
                 value=""
             />
-            <input id="card_ccv" name="card_ccv" value="" />
+            <input id="card_cvc" name="card_cvc" value="" />
 
             <input type="text" name="field_creditCardType" value="MasterCard" />
             <input
@@ -86,11 +156,7 @@
             />
             <input type="text" name="field_phone" value="" />
             <input type="text" name="field_email" value="tienvu@asana.com" />
-            <input
-                type="text"
-                name="field_mitNetworkTransactionId"
-                value="113103541071139"
-            />
+            <input type="text" name="field_mitNetworkTransactionId" value="" />
             <input type="text" name="field_mitConsentAgreementRef" value="1" />
             <input
                 type="text"
@@ -111,6 +177,7 @@
             <br />
             <input type="submit" />
         </form>
+        <div id="3dsContainer"></div>
         <div>
             <textarea
                 rows="20"

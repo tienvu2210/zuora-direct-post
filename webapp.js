@@ -5,8 +5,8 @@ const url = require("url");
 const fs = require("fs");
 const inv = require("./api/invoices");
 const hpm = require("./api/hpmParams");
+const stripeHandler = require("./api/stripeHandler");
 const jsonBody = require("body/json");
-const stripe = require("stripe")(process.env.STRIPE_TEST_SECRET_KEY);
 
 const WEBSERVER_PORT = 3200;
 
@@ -40,6 +40,45 @@ const onRequest = async (request, response) => {
         case "/pages/stuff.js":
             response.writeHead(200, { "Content-Type": "text/html" });
             response.write(fs.readFileSync("./pages/stuff.js", "utf8"));
+            response.end();
+            break;
+        case "/pages/confirm3ds.js":
+            response.writeHead(200, { "Content-Type": "text/html" });
+            response.write(fs.readFileSync("./pages/confirm3ds.js", "utf8"));
+            response.end();
+            break;
+        case "/pages/confirm3ds":
+            let confirm3dsHtml = fs.readFileSync(
+                "./pages/confirm3ds.html",
+                "utf8"
+            );
+            response.writeHead(200, { "Content-Type": "text/html" });
+            response.write(confirm3dsHtml);
+            response.end();
+            break;
+        case "/api/setupPaymentMethod":
+            console.log(queryParams.card);
+            let paymentMethod = await stripeHandler.setupPaymentMethod(
+                JSON.parse(queryParams.card)
+            );
+            response.writeHead(200, { "Content-Type": "application/json" });
+            response.write(JSON.stringify(paymentMethod));
+            response.end();
+            break;
+        case "/api/setupIntends":
+            let setupIntend = await stripeHandler.setupIntends(
+                queryParams.paymentMethodId
+            );
+            response.writeHead(200, { "Content-Type": "application/json" });
+            response.write(JSON.stringify(setupIntend));
+            response.end();
+            break;
+        case "/api/retrieveSetupIntent":
+            let retrieveSetupIntent = await stripeHandler.retrieveSetupIntent(
+                queryParams.setupIntentsId
+            );
+            response.writeHead(200, { "Content-Type": "application/json" });
+            response.write(JSON.stringify(retrieveSetupIntent));
             response.end();
             break;
         case "/api/hpmParams":
