@@ -126,6 +126,18 @@ const onRequest = async (request, response) => {
             );
             response.end();
             break;
+        case "/callback":
+            // draw the direct post form
+            let callbackHtml = fs.readFileSync("./pages/callback.html", "utf8");
+            response.writeHead(200, { "Content-Type": "text/html" });
+            response.write(callbackHtml);
+            response.end();
+            break;
+        case "/pages/callback.js":
+            response.writeHead(200, { "Content-Type": "text/html" });
+            response.write(fs.readFileSync("./pages/callback.js", "utf8"));
+            response.end();
+            break;
         default:
             response.writeHead(404, { "Content-Type": "text/html" });
             response.write("404 Page not found");

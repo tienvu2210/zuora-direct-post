@@ -131,7 +131,7 @@
             />
             <input id="card_cvc" name="card_cvc" value="" />
 
-            <input type="text" name="field_creditCardType" value="MasterCard" />
+            <input type="text" name="field_creditCardType" value="Visa" />
             <input
                 type="text"
                 name="field_creditCardHolderName"
@@ -175,8 +175,9 @@
                 value="Visa,MasterCard"
             />
             <br />
-            <input type="submit" />
+            <input type="hidden" type="submit" />
         </form>
+        <button type="button" onclick="submitDirectPost()">My Submit</button>
         <div id="3dsContainer"></div>
         <div>
             <textarea

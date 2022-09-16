@@ -6,7 +6,7 @@ function fillDefaultCard() {
 }
 
 function fill3DSCard() {
-    document.getElementById("card_number").value = 4000003800000446;
+    document.getElementById("card_number").value = 4000002500003155;
     document.getElementById("card_expiration_month").value = 01;
     document.getElementById("card_expiration_year").value = 2024;
     document.getElementById("card_cvc").value = 123;
@@ -71,7 +71,7 @@ getZuoraAccountId = async () => {
     request.open("GET", "/api/zuoraAccount", false);
     request.setRequestHeader("content-Type", "application/json");
     request.onload = function () {
-        zuoraAccountId = JSON.parse(request.responseText).zuoraAccountId;
+        const zuoraAccountId = JSON.parse(request.responseText).zuoraAccountId;
         document.getElementById("zuoraAccountId").value = zuoraAccountId;
     };
     request.send();
@@ -89,7 +89,7 @@ loadHpmParams = async (form) => {
     request.setRequestHeader("content-Type", "application/json");
 
     request.onload = function () {
-        hpmParams = JSON.parse(request.responseText).hpmParams;
+        const hpmParams = JSON.parse(request.responseText).hpmParams;
 
         form.elements.id.value = hpmParams.id;
         form.elements.tenantId.value = hpmParams.tenantId;
@@ -123,7 +123,7 @@ setupPaymentMethod = async (form) => {
     request.setRequestHeader("content-Type", "application/json");
 
     request.onload = function () {
-        paymentMethod = JSON.parse(request.responseText);
+        const paymentMethod = JSON.parse(request.responseText);
         addStatusMsg(request.responseText);
         document.getElementById("paymentMethodId").value = paymentMethod.id;
     };
@@ -140,7 +140,7 @@ setupIntends = async () => {
     );
     request.setRequestHeader("content-Type", "application/json");
     request.onload = function () {
-        setupIntends = JSON.parse(request.responseText);
+        const setupIntends = JSON.parse(request.responseText);
         addStatusMsg(request.responseText);
         document.getElementById("setupIntentsId").value = setupIntends.id;
         document.getElementById("setupIntentsClientSecret").value =
@@ -169,8 +169,9 @@ maybeVerify3DS = async () => {
             iframe.width = 600;
             iframe.height = 400;
             document.getElementById("3dsContainer").appendChild(iframe);
+            resolve(true);
         } else {
-            resolve();
+            resolve(false);
         }
     });
 };
@@ -189,30 +190,26 @@ on3DSComplete = () => {
     );
     request.setRequestHeader("content-Type", "application/json");
     request.onload = function () {
-        setupIntend = JSON.parse(request.responseText);
+        const setupIntend = JSON.parse(request.responseText);
         addStatusMsg(request.responseText);
         document.getElementById("networkTransactionId").value =
             setupIntend.latest_attempt.payment_method_details.card.network_transaction_id;
 
-        fetch("https://apisandbox.zuora.com/apps/PublicHostedPageLite.do", {
-            method: "POST",
-            headers: {
-                "Content-Type": "multipart/form-data",
-                "Access-Control-Allow-Origin": "http://localhost:3200/",
-            },
-            body: new FormData(document.getElementById("directpost")),
-        });
+        const form = document.getElementById("directpost");
+        form.elements.field_mitNetworkTransactionId.value =
+            document.getElementById("networkTransactionId").value;
+
+        form.submit();
     };
     request.send();
 };
 
-const submitDirectPost = async (form) => {
+const submitDirectPost = async () => {
+    console.log(`Started: ${Date.now()}`);
+    const form = document.getElementById("directpost");
     setupPaymentMethod(form);
     setupIntends();
-    maybeVerify3DS();
-    form.elements.field_mitNetworkTransactionId.value = document.getElementById(
-        "networkTransactionId"
-    ).value;
+    const shouldVerify = await maybeVerify3DS();
 
     getZuoraAccountId();
     loadHpmParams(form);
@@ -223,17 +220,12 @@ const submitDirectPost = async (form) => {
         form.elements.card_expiration_year.value
     );
     form.elements.encrypted_values.value = encryptedValue;
+    if (!shouldVerify) {
+        form.submit();
+    }
 };
 
 window.onload = () => {
-    window.document
-        .querySelector("#directpost")
-        .addEventListener("submit", (e) => {
-            submitDirectPost(e.target);
-
-            e.preventDefault();
-        });
-
     window.addEventListener(
         "message",
         function (ev) {

@@ -127,8 +127,8 @@ function addStatusMsg(msg) {
 function buildEncryptedValues() {
     // const creditCardNumber = 5555555555554444;
     // const creditCardNumber = 4000002760003184; // always authenticate.
-    // const creditCardNumber = 4000003800000446; // Already setup.
-    const creditCardNumber = 4242424242424242;
+    const creditCardNumber = 4000002500003155; // Already setup.
+    // const creditCardNumber = 4242424242424242;
     const cardSecurityCode = 123;
     const creditCardExpirationMonth = 01;
     const creditCardExpirationYear = 2023;
